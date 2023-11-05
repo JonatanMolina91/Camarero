@@ -1,0 +1,23 @@
+TIPO DE JUEGO: D2 de 8bits
+
+OBJETIVO: Camarero que tiene que servir cafes o cerveza a tiempo a un numero de clientes.
+
+COMO GANAR: Servir los tipos de caves o cerfeza al cliente que te lo pida y a tiempo.
+
+COMO PERDER: Cuando se le termine las vidas se acaba el juego, cada vez que se pierde una vida se reinicia el nivel, se pierda una vida cada vez que se equivoque de cafe o termine el tiempo de espera de un cliente.
+
+DIFICULTA: Empieza con un numero determinado de clientes a servir cuando se completa el nivel cuando se sirva a esos clientes, luego aumentara el nivel subiendo la dificulta con mas cliente y reduciendo el tiempo de esperade los clientes.
+
+
+TAMAÑOS:
+
+MESA: 100, 100
+
+SILLA: 50, 50
+
+PJS: 60, 60
+ 
+
+cojunto de mesa y 2 sillas:
+	width = mesaWidth
+	height = heightSilla.2+20+heightMesa
