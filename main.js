@@ -17,7 +17,7 @@ pjs.src = "img/pjs.png";
 window.onload = function () {
 
     //tamaño canvas
-    const CANVASWIDTH = 1500;
+    const CANVASWIDTH = 500;
     const CANVASHEIGHT = 800;
     //tamaño mesa
     const MESAWIDTH = 100;
@@ -32,8 +32,48 @@ window.onload = function () {
     const VELOCIDAD = 10;
     let prota;
 
+    //objetos del mapa
+    let objetos = [];
+
 
     let ctx;
+
+    class Objeto {
+        constructor(x_, y_, siceX_, siceY_) {
+            this.x = x_;
+            this.y = y_;
+            this.siceX = siceX_;
+            this.siceY = siceY_;
+        }
+    }
+
+    class Silla extends Objeto {
+        constructor(x_, y_, siceX_, siceY_) {
+            super(x_, y_, siceX_, siceY_);
+            this.imagen = imSilla1;
+        }
+    }
+
+    class Mesa extends Objeto {
+        constructor(x_, y_, siceX_, siceY_) {
+            super(x_, y_, siceX_, siceY_);
+            this.imagen = imMesa1;
+        }
+    }
+
+    function crearCojunto(x_, y_) {
+        let adios = [];
+        adios.push(new Silla( (x_ + 25), y_, SILLAWIDTH, SILLAHEIGHT ));
+        adios.push(new Silla( (x_ + 25), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT ));
+        adios.push(new Mesa( x_, (y_ + SILLAHEIGHT + 10), MESAWIDTH, MESAHEIGHT ));
+        for(i=0; i<adios.length; ++i) {
+            ctx.drawImage(adios[i].imagen, adios[i].x, adios[i].y, adios[i].siceX, adios[i].siceY);
+        }
+
+        return adios;
+    }
+
+
 
 
 
@@ -81,19 +121,7 @@ window.onload = function () {
         }
     }
 
-    class Mesa {
-        constructor(x, y) {
-            this.mesa = [x, (y + SILLAHEIGHT + 10)];
-            this.silla1 = [(x + 25), y];
-            this.silla2 = [(x + 25), (y + SILLAHEIGHT + 20 + MESAHEIGHT)];
-        }
-
-        dibujar() {
-            ctx.drawImage(imSilla1, this.silla1[0], this.silla1[1], SILLAWIDTH, SILLAHEIGHT);
-            ctx.drawImage(imMesa1, this.mesa[0], this.mesa[1], MESAWIDTH, MESAHEIGHT);
-            ctx.drawImage(imSilla2, this.silla2[0], this.silla2[1], SILLAWIDTH, SILLAHEIGHT);
-        }
-    }
+    
 
 
 
@@ -159,40 +187,43 @@ window.onload = function () {
             }
 
 
-        comprobarChoque(300, 100, MESAWIDTH, (SILLAHEIGHT*2+20+MESAHEIGHT));
+        comprobarChoque(objetos);
         
-        ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 30, 60, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
+        ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
 
     }
 
-    function comprobarChoque(x_, y_, siceX_, siceY_) {
+    function comprobarChoque(obj_) {
         let bIzq  = prota.x;
 		let bDer  = prota.x + PROTAWIDTH;
 		let bDown = prota.y;
 		let bUp   = prota.y + PROTAHEIGHT;
 
-        let nIzq  = x_;
-		let nDer  = x_ + siceX_;
-		let nDown   = y_;
-		let nUp = y_ + siceY_;
-			
+        let nIzq;
+		let nDer;
+		let nDown;
+		let nUp;
+    
+
+			for(i=0; i<obj_.length; ++i) {
+                
+                let nIzq  = obj_[i].x;
+                let nDer  = obj_[i].x + obj_[i].siceX;
+                let nDown   = obj_[i].y;
+                let nUp = obj_[i].y + obj_[i].siceY;
 		if (( bDer  > nIzq ) &
 			( bIzq  < nDer ) &
 			( bUp   > nDown) &
 			( bDown < nUp) ) {
-		
-                return true;
+                console.log("hola");
+                prota.x = prota.direccion==39?(nIzq-PROTAWIDTH) :prota.x;
+                prota.y = prota.direccion==40?(nDown-PROTAHEIGHT) :prota.y;
+                prota.y = prota.direccion==38?nUp :prota.y;
+                prota.x = prota.direccion==37?nDer :prota.x;
 		} else {
-            return false;
         }
-        /*
-        if (prota.x <= (x_ + siceX_) && prota.y <= (y_ + siceY_)) {
-            prota.y = prota.direccion==38?(y_ + siceY_):prota.y;
-            prota.x = prota.direccion==37?(x_ + siceX_):prota.x;
-            return true;
-        } else {
-            return false;
-        }*/
+    }
+        
     }
 
 
@@ -203,18 +234,19 @@ window.onload = function () {
 
     ctx.drawImage(barra, 10, 10, 90, 480);
 
-    let conj = new Mesa(300, 100);
-    conj.dibujar();
 
     prota = new Protagonista();
     dibujarProta();
 
-
+    
 
 
     document.addEventListener("keydown", activaMovimiento, false);
     document.addEventListener("keyup", desactivaMovimiento, false);
 
+    objetos = crearCojunto(200,100);
+    objetos.push(new Objeto(10, 10, 90, 480));
+   
 
 
 }
