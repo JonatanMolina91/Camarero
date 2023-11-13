@@ -19,25 +19,28 @@ pjs.src = "img/pjs.png";
 window.onload = function () {
 
     //tamaño canvas
-    const CANVASWIDTH = 500;
-    const CANVASHEIGHT = 800;
+    const CANVASWIDTH = 1200;
+    const CANVASHEIGHT = 600;
     //tamaño mesa
-    const MESAWIDTH = 100;
-    const MESAHEIGHT = 100;
+    const MESAWIDTH = 50;
+    const MESAHEIGHT = 50;
     //tamaño sillas
-    const SILLAWIDTH = 50;
-    const SILLAHEIGHT = 50;
+    const SILLAWIDTH = 30;
+    const SILLAHEIGHT = 30;
     //tamaño prota
     const PROTAWIDTH = 30;
-    const PROTAHEIGHT = 60;
+    const PROTAHEIGHT = 40;
+    //TAMAÑO CLIENTE
+    const CLIENTEWIDTH = 30;
+    const CLIENTEHEIGHT = 40;
     //velocidad del prota
     const VELOCIDAD = 10;
     let prota;
 
-    //objetos del mapa
+    //objetos CON COLISION
     let objetosColision = [];
 
-    //cafes de la barra
+    //OBJETOS CON INTERACION
     let objetosInteracion = [];
 
     let bandeja;
@@ -58,9 +61,9 @@ window.onload = function () {
         constructor(x_, y_, siceX_, siceY_) {
             super(x_, y_, siceX_, siceY_);
             this.sprite = [[135,4], [165,4]];
-            this.x += 10;
+            this.x;
             this.cafe=null;
-            ctx.drawImage(pjs, this.sprite[0][0], this.sprite[0][1], 25, 40, this.x, this.y, PROTAWIDTH, PROTAHEIGHT);
+            ctx.drawImage(pjs, this.sprite[0][0], this.sprite[0][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
         }
 
         generarCafe() {
@@ -75,13 +78,15 @@ window.onload = function () {
             super(x_, y_, siceX_, siceY_);
             this.area = area_;
             this.tipo = tipo_;
-            switch (tipo_) {
-                case "solo":
+            switch (this.tipo) {
+                case 0:
                     ctx.fillStyle = "black";
+                    this.nombre = "solo";
                     this.id=0;
                     break;
-                case "leche":
+                case 1:
                     ctx.fillStyle = "red";
+                    this.nombre = "leche";
                     this.id=1;
                     break;
             }
@@ -111,8 +116,8 @@ window.onload = function () {
 
     function crearCojunto(x_, y_) {
         let adios = [];
-        adios.push(new Silla((x_ + 25), y_, SILLAWIDTH, SILLAHEIGHT, 0));
-        adios.push(new Silla((x_ + 25), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT));
+        adios.push(new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0));
+        adios.push(new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT));
         adios.push(new Mesa(x_, (y_ + SILLAHEIGHT + 10), MESAWIDTH, MESAHEIGHT, 1));
         for (i = 0; i < adios.length; ++i) {
             ctx.drawImage(adios[i].imagen, adios[i].x, adios[i].y, adios[i].siceX, adios[i].siceY);
@@ -128,8 +133,8 @@ window.onload = function () {
     class Protagonista {
         constructor() {
             this.sprite = [[43, 132], [73, 132], [43, 198], [73, 198], [40, 3], [73, 3], [43, 69], [73, 69]];
-            this.x = 10;
-            this.y = 600;
+            this.x = 100;
+            this.y = 200;
             this.animacion;
             this.moviendo = false;
             this.posicion = 0;
@@ -181,7 +186,7 @@ window.onload = function () {
     function activaMovimiento(event) {
         console.log(prota.area);
         if(event.keyCode == 32 && prota.area > -1 && prota.area < 2) {
-            prota.cafe = objetosInteracion[prota.area].tipo;
+            prota.cafe = objetosInteracion[prota.area].nombre;
             bandeja.innerHTML = "Bandeja:" + prota.cafe;
         }
 
@@ -311,7 +316,7 @@ window.onload = function () {
     canvas.setAttribute("height", CANVASHEIGHT);
     ctx = canvas.getContext("2d");
 
-    ctx.drawImage(barra, 10, 10, 90, 480);
+    ctx.drawImage(barra, 10, 10, 50, 390);
 
 
     prota = new Protagonista();
@@ -322,13 +327,12 @@ window.onload = function () {
 
     document.addEventListener("keydown", activaMovimiento, false);
     document.addEventListener("keyup", desactivaMovimiento, false);
-    objetosInteracion.push(new Cafe(30, 400, 30, 30, "leche",[30+70, 400, 30, 30]));
-    objetosInteracion.push(new Cafe(30, 300, 30, 30, "solo", [30+70, 300, 30, 30]));
+    objetosInteracion.push(new Cafe(25, 350, 20, 20, 1,[45, 350, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 300, 20, 20, 0, [45, 300, 40, 20]));
     objetosColision = crearCojunto(200, 100);
     objetosColision[0].generarCliente();
     objetosColision[0].cliente.generarCafe();
-    objetosColision.push(new Objeto(10, 10, 90, 480));
-   
+    objetosColision.push(new Objeto(10, 10, 50, 390));
 
 
 
