@@ -11,6 +11,18 @@ imSilla1.src = "img/silla1.png";
 let imSilla2 = new Image();
 imSilla2.src = "img/silla2.png";
 
+let imLeche = new Image();
+imLeche.src = "img/leche.svg";
+
+let imSolo = new Image();
+imSolo.src = "img/solo.svg";
+
+let imCortado = new Image();
+imCortado.src = "img/cortado.svg";
+
+let imAsiatico = new Image();
+imAsiatico.src = "img/asiatico.svg";
+
 let pjs = new Image();
 pjs.src = "img/pjs.png";
 
@@ -43,11 +55,13 @@ window.onload = function () {
     //OBJETOS CON INTERACION
     let objetosInteracion = [];
 
-    let bandeja;
+    let bandeja = "vacia";
+    let vidas = 3;
+    let puntos = 0;
 
 
     let ctx;
-  
+
     class Objeto {
         constructor(x_, y_, siceX_, siceY_) {
             this.x = x_;
@@ -60,38 +74,44 @@ window.onload = function () {
     class Cliente extends Objeto {
         constructor(x_, y_, siceX_, siceY_) {
             super(x_, y_, siceX_, siceY_);
-            this.sprite = [[135,4], [165,4]];
+            this.sprite = [[135, 4], [165, 4]];
             this.x;
-            this.cafe=null;
+            this.cafe = null;
             ctx.drawImage(pjs, this.sprite[0][0], this.sprite[0][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
         }
 
         generarCafe() {
-            Math.floor(Math.random() * objetosInteracion.length)
-            this.cafe = new Cafe(this.x, (this.y+this.siceY), 30, 30,"solo", [(this.x - 30), this.y, this.siceX+60, this.siceY]);
+            
+            this.cafe = new Cafe(this.x, (this.y + this.siceY), 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY]);
             objetosInteracion.push(this.cafe);
         }
-    } 
+    }
 
     class Cafe extends Objeto {
         constructor(x_, y_, siceX_, siceY_, tipo_, area_) {
             super(x_, y_, siceX_, siceY_);
             this.area = area_;
             this.tipo = tipo_;
+            this.image;
             switch (this.tipo) {
                 case 0:
-                    ctx.fillStyle = "black";
                     this.nombre = "solo";
-                    this.id=0;
+                    this.image = imSolo;
                     break;
                 case 1:
-                    ctx.fillStyle = "red";
                     this.nombre = "leche";
-                    this.id=1;
+                    this.image = imLeche;
+                    break;
+                case 2:
+                    this.nombre = "cortado";
+                    this.image = imCortado;
+                    break;
+                case 3:
+                    this.nombre = "asiatico";
+                    this.image = imAsiatico;
                     break;
             }
-            ctx.fillRect(this.x, this.y, this.siceX, this.siceY);
-            ctx.fillRect(this.area[0], this.area[1], this.area[2], this.area[3]);
+            ctx.drawImage(this.image, this.x, this.y, this.siceX, this.siceY);
         }
     }
 
@@ -139,7 +159,7 @@ window.onload = function () {
             this.moviendo = false;
             this.posicion = 0;
             this.direccion = 0;
-            this.cafe="nada";
+            this.cafe = "nada";
             this.area = -1;
         }
 
@@ -185,13 +205,16 @@ window.onload = function () {
 
     function activaMovimiento(event) {
         console.log(prota.area);
-        if(event.keyCode == 32 && prota.area > -1 && prota.area < 2) {
-            prota.cafe = objetosInteracion[prota.area].nombre;
-            bandeja.innerHTML = "Bandeja:" + prota.cafe;
+        if (event.keyCode == 32 && prota.area > -1 && prota.area < 4) {
+            prota.cafe = objetosInteracion[prota.area];
+            bandeja = prota.cafe.nombre;
+            actualizarMarcador();
         }
 
-        if(event.keyCode == 32 && prota.area > 1) {
-            bandeja.innerHTML = "Bandeja: vacia";
+        if (event.keyCode == 32 && prota.area > 3) {
+            bandeja = "vacia";
+            comprobarBebida(prota, objetosInteracion[prota.area]);
+            actualizarMarcador();
         }
         if (!prota.moviendo && event.keyCode > 36 && event.keyCode < 41) {
             prota.animacion = setInterval(dibujarProta, 1000 / 10);
@@ -200,6 +223,15 @@ window.onload = function () {
         }
 
 
+    }
+
+    function comprobarBebida(prota_, cafe_) {
+        console.log(prota_.cafe.tipo + " " + cafe_.tipo);
+        if (prota_.cafe.tipo === cafe_.tipo) {
+            puntos += 1;
+        } else {
+            vidas -= 1;
+        }
     }
 
     function desactivaMovimiento(event) {
@@ -290,28 +322,36 @@ window.onload = function () {
         let bDer = prota.x + PROTAWIDTH;
         let bDown = prota.y;
         let bUp = prota.y + PROTAHEIGHT;
-        let i=0;
+        let i = 0;
         prota.area = -1;
-        while( i<objetosInteracion.length && prota.area < 0 ) {
-        let nIzq = objetosInteracion[i].area[0];
-        let nDer = objetosInteracion[i].area[0] + objetosInteracion[i].area[2];
-        let nDown = objetosInteracion[i].area[1];
-        let nUp = objetosInteracion[i].area[1] + objetosInteracion[i].area[3];
-        if ((bDer > nIzq) &
+        while (i < objetosInteracion.length && prota.area < 0) {
+            let nIzq = objetosInteracion[i].area[0];
+            let nDer = objetosInteracion[i].area[0] + objetosInteracion[i].area[2];
+            let nDown = objetosInteracion[i].area[1];
+            let nUp = objetosInteracion[i].area[1] + objetosInteracion[i].area[3];
+            if ((bDer > nIzq) &
                 (bIzq < nDer) &
                 (bUp > nDown) &
                 (bDown < nUp)) {
-                    prota.area = i;
+                prota.area = i;
             } else {
-                
+
             }
             ++i;
         }
     }
 
+    function actualizarMarcador() {
+        document.getElementById("bandeja").innerText = "Bandeja " + bandeja;
+        document.getElementById("vidas").innerText = "Vidas " + vidas;
+        document.getElementById("puntos").innerText = "Puntos " + puntos;
+    }
+
 
     let canvas = document.getElementById("miCanvas");
-    bandeja = document.getElementById("bandeja");
+
+    actualizarMarcador();
+
     canvas.setAttribute("width", CANVASWIDTH);
     canvas.setAttribute("height", CANVASHEIGHT);
     ctx = canvas.getContext("2d");
@@ -327,8 +367,10 @@ window.onload = function () {
 
     document.addEventListener("keydown", activaMovimiento, false);
     document.addEventListener("keyup", desactivaMovimiento, false);
-    objetosInteracion.push(new Cafe(25, 350, 20, 20, 1,[45, 350, 40, 20]));
-    objetosInteracion.push(new Cafe(25, 300, 20, 20, 0, [45, 300, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
     objetosColision = crearCojunto(200, 100);
     objetosColision[0].generarCliente();
     objetosColision[0].cliente.generarCafe();
