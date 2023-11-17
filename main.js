@@ -47,6 +47,12 @@ window.onload = function () {
     const CLIENTEHEIGHT = 40;
     //velocidad del prota
     const VELOCIDAD = 10;
+
+    //numero de mesas generar
+    const NUMEROMESAS = 4;
+
+    //cada cuato tiempo genera un cliente en segundos
+    let GENCLIENTETIEMPO = 1000*3;
     let prota;
 
     //objetos CON COLISION
@@ -54,6 +60,15 @@ window.onload = function () {
 
     //OBJETOS CON INTERACION
     let objetosInteracion = [];
+
+    //clientes actuales
+    let clientesActuales = 0;
+
+    let mesas = [];
+
+
+
+
 
     let bandeja = "vacia";
     let vidas = 3;
@@ -78,10 +93,11 @@ window.onload = function () {
             this.x;
             this.cafe = null;
             ctx.drawImage(pjs, this.sprite[0][0], this.sprite[0][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
+            this.generarCafe();
         }
 
         generarCafe() {
-            
+
             this.cafe = new Cafe(this.x, (this.y + this.siceY), 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY]);
             objetosInteracion.push(this.cafe);
         }
@@ -125,26 +141,31 @@ window.onload = function () {
         generarCliente() {
             this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT);
         }
+
+        dibujar() {
+            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
+        }
     }
 
     class Mesa extends Objeto {
-        constructor(x_, y_, siceX_, siceY_) {
-            super(x_, y_, siceX_, siceY_);
+        constructor(x_, y_, siceX_, siceY_, id_) {
+            super(x_, y_+SILLAHEIGHT+10, siceX_, siceY_);
             this.imagen = imMesa1;
+            this.id=id_;
+            this.dibujar()
+            this.sillas = [new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0),
+                new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT)];
+                this.sillas[0].dibujar();
+                this.sillas[1].dibujar();
+
+        }
+
+        dibujar() {
+            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
         }
     }
 
-    function crearCojunto(x_, y_) {
-        let adios = [];
-        adios.push(new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0));
-        adios.push(new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT));
-        adios.push(new Mesa(x_, (y_ + SILLAHEIGHT + 10), MESAWIDTH, MESAHEIGHT, 1));
-        for (i = 0; i < adios.length; ++i) {
-            ctx.drawImage(adios[i].imagen, adios[i].x, adios[i].y, adios[i].siceX, adios[i].siceY);
-        }
 
-        return adios;
-    }
 
 
 
@@ -347,6 +368,22 @@ window.onload = function () {
         document.getElementById("puntos").innerText = "Puntos " + puntos;
     }
 
+    function generarClientes() {
+        let numeroMesa = 0;
+        let numeroSilla = 0;
+        let hayCliente = true;
+        while(hayCliente && clientesActuales != (NUMEROMESAS*2)) {
+            numeroMesa = Math.floor(Math.random() * NUMEROMESAS);
+            numeroSilla = Math.floor(Math.random() * 2);
+            console.log(clientesActuales);
+            if (mesas[numeroMesa].sillas[numeroSilla].cliente == null) {
+                mesas[numeroMesa].sillas[numeroSilla].generarCliente();
+                hayCliente = false;
+                clientesActuales++;
+            }
+    }
+}
+
 
     let canvas = document.getElementById("miCanvas");
 
@@ -367,6 +404,23 @@ window.onload = function () {
 
     document.addEventListener("keydown", activaMovimiento, false);
     document.addEventListener("keyup", desactivaMovimiento, false);
+    
+
+    let xms=200;
+    for(i=0; i<NUMEROMESAS; ++i) {
+    mesas.push(new Mesa(xms,100, MESAWIDTH, MESAHEIGHT, i+1));
+    xms +=MESAWIDTH*2;
+    objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
+    }
+
+
+    setInterval(generarClientes, GENCLIENTETIEMPO);
+
+
+
+    
+
+    /*
     objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
     objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
     objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
@@ -375,7 +429,7 @@ window.onload = function () {
     objetosColision[0].generarCliente();
     objetosColision[0].cliente.generarCafe();
     objetosColision.push(new Objeto(10, 10, 50, 390));
-
+    */
 
 
 
