@@ -49,7 +49,7 @@ window.onload = function () {
     const VELOCIDAD = 10;
 
     //numero de mesas generar
-    const NUMEROMESAS = 4;
+    const NUMEROMESAS = 10;
 
     //cada cuato tiempo genera un cliente en segundos
     let GENCLIENTETIEMPO = 1000*3;
@@ -159,7 +159,6 @@ window.onload = function () {
 
         generarCafe() {
             this.dibujarGlobo();
-            console.log(this.idMesa + " " +this.idSilla);
             if(this.orientacion==0) {
             this.cafe = new Cafe(this.x+5, this.y-28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
             } else {
@@ -176,7 +175,7 @@ window.onload = function () {
                 } else {
                     ctx.clearRect(this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT+32);
                 }
-                objetosInteracion.splice(id_);
+                objetosInteracion.splice(id_, 1);
         }
     }
 
@@ -285,6 +284,7 @@ window.onload = function () {
         if (event.keyCode == 32 && prota.area > 3) {
             bandeja = "vacia";
             comprobarBebida(prota, objetosInteracion[prota.area]);
+            prota.cafe = "vacio";
             actualizarMarcador();
         }
         if (!prota.moviendo && event.keyCode > 36 && event.keyCode < 41) {
@@ -302,9 +302,10 @@ window.onload = function () {
         } else {
             vidas -= 1;
         }
-        console.log(cafe_.idMesa + " " + cafe_.idSilla);
         mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
         clientesActuales--;
+        console.log(objetosInteracion.length);
+        console.table(objetosInteracion);
     }
 
     function desactivaMovimiento(event) {
@@ -357,7 +358,6 @@ window.onload = function () {
 
         comprobarChoque(objetosColision);
         comprobarInteracion();
-
         ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
         redibujarGlobos();
 
@@ -413,6 +413,7 @@ window.onload = function () {
             }
             ++i;
         }
+        
     }
 
     function actualizarMarcador() {
