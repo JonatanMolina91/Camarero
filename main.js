@@ -86,28 +86,107 @@ window.onload = function () {
         }
     }
 
-    class Cliente extends Objeto {
-        constructor(x_, y_, siceX_, siceY_) {
+    class Mesa extends Objeto {
+        constructor(x_, y_, siceX_, siceY_, id_) {
+            super(x_, y_+SILLAHEIGHT+10, siceX_, siceY_);
+            this.imagen = imMesa1;
+            this.id=id_;
+            this.dibujar()
+            this.sillas = [new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0, this.id),
+                new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT, 1, this.id)];
+                this.sillas[0].dibujar();
+                this.sillas[1].dibujar();
+
+        }
+
+        dibujar() {
+            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
+        }
+    }
+
+    class Silla extends Objeto {
+        constructor(x_, y_, siceX_, siceY_, orientacion_, idMesa_) {
             super(x_, y_, siceX_, siceY_);
-            this.sprite = [[135, 4], [165, 4]];
-            this.x;
+            this.orientacion = orientacion_;
+            this.imagen = orientacion_ == 0 ? imSilla1 : imSilla2;
+            this.cliente = null;
+            this.idMesa = idMesa_;
+        }
+
+        generarCliente() {
+            this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT, this.orientacion,  this.idMesa, this.orientacion);
+        }
+
+        eliminarCliente(id_) {
+            this.cliente.eliminarCafe(id_);
+            this.cliente = null;
+            this.dibujar();
+        }
+
+        dibujar() {
+            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
+        }
+    }
+
+
+    class Cliente extends Objeto {
+        constructor(x_, y_, siceX_, siceY_, orientacion_, idMesa_, idSilla_) {
+            super(x_, y_, siceX_, siceY_);
+            this.sprite = [[135, 4],[135, 199]];
             this.cafe = null;
-            ctx.drawImage(pjs, this.sprite[0][0], this.sprite[0][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
+            this.orientacion = orientacion_;
+            this.y = this.orientacion==1?this.y-15:this.y; 
+            this.idMesa=idMesa_;
+            this.idSilla=idSilla_;
+            this.dibujarCliente();
             this.generarCafe();
+
+        }
+
+        dibujarCliente() {
+            ctx.drawImage(pjs, this.sprite[this.orientacion][0], this.sprite[this.orientacion][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
+        }
+
+        dibujarGlobo() {
+            ctx.fillStyle = "white";
+            if(this.orientacion==0) {
+            ctx.fillRect(this.x+2, this.y-30, 25, 25, );
+            } else {
+                ctx.fillRect(this.x+2, this.y+28, 25, 25);
+            }
+            
         }
 
         generarCafe() {
-
-            this.cafe = new Cafe(this.x, (this.y + this.siceY), 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY]);
+            this.dibujarGlobo();
+            console.log(this.idMesa + " " +this.idSilla);
+            if(this.orientacion==0) {
+            this.cafe = new Cafe(this.x+5, this.y-28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            } else {
+                this.cafe = new Cafe(this.x+5, this.y+28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            }
             objetosInteracion.push(this.cafe);
+            
+        }
+
+        eliminarCafe(id_) {
+            this.cafe = null;
+            if(this.orientacion==0) {
+                ctx.clearRect(this.x, this.y-32, CLIENTEWIDTH, CLIENTEHEIGHT+32);
+                } else {
+                    ctx.clearRect(this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT+32);
+                }
+                objetosInteracion.splice(id_);
         }
     }
 
     class Cafe extends Objeto {
-        constructor(x_, y_, siceX_, siceY_, tipo_, area_) {
+        constructor(x_, y_, siceX_, siceY_, tipo_, area_, idMesa_ = -1, idSilla_ = -1) {
             super(x_, y_, siceX_, siceY_);
             this.area = area_;
             this.tipo = tipo_;
+            this.idMesa=idMesa_;
+            this.idSilla=idSilla_;
             this.image;
             switch (this.tipo) {
                 case 0:
@@ -127,43 +206,15 @@ window.onload = function () {
                     this.image = imAsiatico;
                     break;
             }
+            this.dibujar();
+        }
+        dibujar() {
             ctx.drawImage(this.image, this.x, this.y, this.siceX, this.siceY);
         }
     }
 
-    class Silla extends Objeto {
-        constructor(x_, y_, siceX_, siceY_, orientacion_) {
-            super(x_, y_, siceX_, siceY_);
-            this.imagen = orientacion_ == 0 ? imSilla1 : imSilla2;
-            this.cliente = null;
-        }
-
-        generarCliente() {
-            this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT);
-        }
-
-        dibujar() {
-            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
-        }
-    }
-
-    class Mesa extends Objeto {
-        constructor(x_, y_, siceX_, siceY_, id_) {
-            super(x_, y_+SILLAHEIGHT+10, siceX_, siceY_);
-            this.imagen = imMesa1;
-            this.id=id_;
-            this.dibujar()
-            this.sillas = [new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0),
-                new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT)];
-                this.sillas[0].dibujar();
-                this.sillas[1].dibujar();
-
-        }
-
-        dibujar() {
-            ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
-        }
-    }
+    
+    
 
 
 
@@ -225,7 +276,6 @@ window.onload = function () {
 
 
     function activaMovimiento(event) {
-        console.log(prota.area);
         if (event.keyCode == 32 && prota.area > -1 && prota.area < 4) {
             prota.cafe = objetosInteracion[prota.area];
             bandeja = prota.cafe.nombre;
@@ -247,12 +297,14 @@ window.onload = function () {
     }
 
     function comprobarBebida(prota_, cafe_) {
-        console.log(prota_.cafe.tipo + " " + cafe_.tipo);
         if (prota_.cafe.tipo === cafe_.tipo) {
             puntos += 1;
         } else {
             vidas -= 1;
         }
+        console.log(cafe_.idMesa + " " + cafe_.idSilla);
+        mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
+        clientesActuales--;
     }
 
     function desactivaMovimiento(event) {
@@ -307,6 +359,7 @@ window.onload = function () {
         comprobarInteracion();
 
         ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
+        redibujarGlobos();
 
     }
 
@@ -375,12 +428,22 @@ window.onload = function () {
         while(hayCliente && clientesActuales != (NUMEROMESAS*2)) {
             numeroMesa = Math.floor(Math.random() * NUMEROMESAS);
             numeroSilla = Math.floor(Math.random() * 2);
-            console.log(clientesActuales);
             if (mesas[numeroMesa].sillas[numeroSilla].cliente == null) {
                 mesas[numeroMesa].sillas[numeroSilla].generarCliente();
                 hayCliente = false;
                 clientesActuales++;
             }
+    }
+}
+
+function redibujarGlobos() {
+    for(i=0; i<mesas.length; ++i) {
+        for(u=0; u<2; ++u) {
+            if(mesas[i].sillas[u].cliente != null){
+                mesas[i].sillas[u].cliente.dibujarGlobo();
+                mesas[i].sillas[u].cliente.cafe.dibujar();
+            }
+        }
     }
 }
 
@@ -394,26 +457,36 @@ window.onload = function () {
     ctx = canvas.getContext("2d");
 
     ctx.drawImage(barra, 10, 10, 50, 390);
+    
 
 
     prota = new Protagonista();
     dibujarProta();
+    
 
 
 
 
     document.addEventListener("keydown", activaMovimiento, false);
     document.addEventListener("keyup", desactivaMovimiento, false);
+
+    objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
+
+    objetosColision.push(new Objeto(10, 10, 50, 390));
     
 
     let xms=200;
     for(i=0; i<NUMEROMESAS; ++i) {
-    mesas.push(new Mesa(xms,100, MESAWIDTH, MESAHEIGHT, i+1));
+    mesas.push(new Mesa(xms,100, MESAWIDTH, MESAHEIGHT, i));
     xms +=MESAWIDTH*2;
     objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
     }
 
-
+    //generarClientes();
+    
     setInterval(generarClientes, GENCLIENTETIEMPO);
 
 
