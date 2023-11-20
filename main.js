@@ -23,6 +23,9 @@ imCortado.src = "img/cortado.svg";
 let imAsiatico = new Image();
 imAsiatico.src = "img/asiatico.svg";
 
+let imBarraTiempo = new Image();
+imBarraTiempo.src = "img/barra_tiempo.svg";
+
 let pjs = new Image();
 pjs.src = "img/pjs.png";
 
@@ -48,11 +51,17 @@ window.onload = function () {
     //velocidad del prota
     const VELOCIDAD = 10;
 
+    //numero maximo de clientes que se genera
+    const LIMITECLIENTES = 1;
+
     //numero de mesas generar
-    const NUMEROMESAS = 10;
+    const NUMEROMESAS = 1;
 
     //cada cuato tiempo genera un cliente en segundos
-    let GENCLIENTETIEMPO = 1000*3;
+    let GENCLIENTETIEMPO = 1000 * 2;
+
+    //cada cuanto tiempo desaparece un cliente en segundos
+    let TIEMPOESPERA =  1000*16;
     let prota;
 
     //objetos CON COLISION
@@ -64,19 +73,22 @@ window.onload = function () {
     //clientes actuales
     let clientesActuales = 0;
 
+    
+
     let mesas = [];
 
 
 
 
 
-    let bandeja = "vacia";
+    let bandeja = -1;
     let vidas = 3;
     let puntos = 0;
 
 
     let ctx;
 
+    
     class Objeto {
         constructor(x_, y_, siceX_, siceY_) {
             this.x = x_;
@@ -88,14 +100,14 @@ window.onload = function () {
 
     class Mesa extends Objeto {
         constructor(x_, y_, siceX_, siceY_, id_) {
-            super(x_, y_+SILLAHEIGHT+10, siceX_, siceY_);
+            super(x_, y_ + SILLAHEIGHT + 10, siceX_, siceY_);
             this.imagen = imMesa1;
-            this.id=id_;
+            this.id = id_;
             this.dibujar()
             this.sillas = [new Silla((x_ + 10), y_, SILLAWIDTH, SILLAHEIGHT, 0, this.id),
-                new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT, 1, this.id)];
-                this.sillas[0].dibujar();
-                this.sillas[1].dibujar();
+            new Silla((x_ + 10), (y_ + SILLAHEIGHT + 20 + MESAWIDTH), SILLAWIDTH, SILLAHEIGHT, 1, this.id)];
+            this.sillas[0].dibujar();
+            this.sillas[1].dibujar();
 
         }
 
@@ -111,14 +123,27 @@ window.onload = function () {
             this.imagen = orientacion_ == 0 ? imSilla1 : imSilla2;
             this.cliente = null;
             this.idMesa = idMesa_;
+            this.idTiempo;
         }
 
         generarCliente() {
-            this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT, this.orientacion,  this.idMesa, this.orientacion);
+            this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT, this.orientacion, this.idMesa, this.orientacion);
+            let idIn = 0;
+                while(idIn<objetosInteracion.length && objetosInteracion[idIn].idMesa != this.idMesa && objetosInteracion[idIn].idSilla != this.idSilla ) {
+                    ++idIn
+                }
+                this.idTiempo = setTimeout(function(id_) {
+                    this.cliente.eliminarCafe(+id_);
+                    this.cliente = null;
+                    this.dibujar();
+                    --clientesActuales;
+                }.bind(this), TIEMPOESPERA, idIn);
+                
         }
 
         eliminarCliente(id_) {
-            this.cliente.eliminarCafe(id_);
+            clearTimeout(this.idTiempo);
+            this.cliente.eliminarCafe(+id_);
             this.cliente = null;
             this.dibujar();
         }
@@ -132,50 +157,69 @@ window.onload = function () {
     class Cliente extends Objeto {
         constructor(x_, y_, siceX_, siceY_, orientacion_, idMesa_, idSilla_) {
             super(x_, y_, siceX_, siceY_);
-            this.sprite = [[135, 4],[135, 199]];
+            this.sprite = [[135, 4], [135, 199]];
+            this.barraTiempoSprite = [[0, 0], [0, 20], [0, 40], [0, 60], [0, 80], [0, 100], [0, 120], [0, 140]];
             this.cafe = null;
             this.orientacion = orientacion_;
-            this.y = this.orientacion==1?this.y-15:this.y; 
-            this.idMesa=idMesa_;
-            this.idSilla=idSilla_;
+            this.y = this.orientacion == 1 ? this.y - 15 : this.y;
+            this.idMesa = idMesa_;
+            this.idSilla = idSilla_;
             this.dibujarCliente();
             this.generarCafe();
+            this.idBarraTiempo;
+            this.pos = 0;
 
         }
 
         dibujarCliente() {
             ctx.drawImage(pjs, this.sprite[this.orientacion][0], this.sprite[this.orientacion][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
+            this.dibujarBarraTiempo(0);
+            this.idBarraTiempo = setInterval( function() {
+                 this.pos = this.pos !=7?(this.pos + 1) % 8:this.pos;
+                this.dibujarBarraTiempo(this.pos);
+            }.bind(this),2000);
         }
 
         dibujarGlobo() {
             ctx.fillStyle = "white";
-            if(this.orientacion==0) {
-            ctx.fillRect(this.x+2, this.y-30, 25, 25, );
+            if (this.orientacion == 0) {
+                ctx.fillRect(this.x + 2, this.y - 30, 25, 25,);
             } else {
-                ctx.fillRect(this.x+2, this.y+28, 25, 25);
+                ctx.fillRect(this.x + 2, this.y + 28, 25, 25);
             }
-            
+
+        }
+
+        dibujarBarraTiempo(id_) {
+            console.log(id_);
+            if (this.orientacion == 0) {
+            ctx.drawImage(imBarraTiempo, this.barraTiempoSprite[id_][0], this.barraTiempoSprite[id_][1], 50, 10, this.x-5, this.y+45, 40, 5);
+            } else {
+                ctx.drawImage(imBarraTiempo, this.barraTiempoSprite[id_][0], this.barraTiempoSprite[id_][1], 50, 10, this.x-5, this.y-10, 40, 5);
+            }
         }
 
         generarCafe() {
             this.dibujarGlobo();
-            if(this.orientacion==0) {
-            this.cafe = new Cafe(this.x+5, this.y-28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            if (this.orientacion == 0) {
+                this.cafe = new Cafe(this.x + 5, this.y - 28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
             } else {
-                this.cafe = new Cafe(this.x+5, this.y+28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+                this.cafe = new Cafe(this.x + 5, this.y + 28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
             }
             objetosInteracion.push(this.cafe);
-            
+
         }
 
         eliminarCafe(id_) {
+            clearInterval(this.idBarraTiempo);
+            this.dibujarBarraTiempo(7);
             this.cafe = null;
-            if(this.orientacion==0) {
-                ctx.clearRect(this.x, this.y-32, CLIENTEWIDTH, CLIENTEHEIGHT+32);
-                } else {
-                    ctx.clearRect(this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT+32);
-                }
-                objetosInteracion.splice(id_, 1);
+            if (this.orientacion == 0) {
+                ctx.clearRect(this.x, this.y - 32, CLIENTEWIDTH, CLIENTEHEIGHT + 32);
+            } else {
+                ctx.clearRect(this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT + 32);
+            }
+            objetosInteracion.splice(id_, 1);
         }
     }
 
@@ -184,8 +228,8 @@ window.onload = function () {
             super(x_, y_, siceX_, siceY_);
             this.area = area_;
             this.tipo = tipo_;
-            this.idMesa=idMesa_;
-            this.idSilla=idSilla_;
+            this.idMesa = idMesa_;
+            this.idSilla = idSilla_;
             this.image;
             switch (this.tipo) {
                 case 0:
@@ -212,8 +256,8 @@ window.onload = function () {
         }
     }
 
-    
-    
+
+
 
 
 
@@ -275,14 +319,18 @@ window.onload = function () {
 
 
     function activaMovimiento(event) {
+        if (event.keyCode == 32) {
+            comprobarInteracion();
+        }
         if (event.keyCode == 32 && prota.area > -1 && prota.area < 4) {
             prota.cafe = objetosInteracion[prota.area];
-            bandeja = prota.cafe.nombre;
+            bandeja = prota.cafe.tipo;
             actualizarMarcador();
         }
 
         if (event.keyCode == 32 && prota.area > 3) {
-            bandeja = "vacia";
+            bandeja = -1;
+
             comprobarBebida(prota, objetosInteracion[prota.area]);
             prota.cafe = "vacio";
             actualizarMarcador();
@@ -304,8 +352,6 @@ window.onload = function () {
         }
         mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
         clientesActuales--;
-        console.log(objetosInteracion.length);
-        console.table(objetosInteracion);
     }
 
     function desactivaMovimiento(event) {
@@ -357,9 +403,9 @@ window.onload = function () {
 
 
         comprobarChoque(objetosColision);
-        comprobarInteracion();
         ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
         redibujarGlobos();
+        
 
     }
 
@@ -413,12 +459,42 @@ window.onload = function () {
             }
             ++i;
         }
-        
+
     }
 
     function actualizarMarcador() {
-        document.getElementById("bandeja").innerText = "Bandeja " + bandeja;
-        document.getElementById("vidas").innerText = "Vidas " + vidas;
+        let dire = "";
+        switch (bandeja) {
+
+            case 0:
+                dire = "img/solo.svg";
+                break;
+            case 1:
+                dire = "img/leche.svg";
+                break;
+            case 2:
+                dire = "img/cortado.svg";
+                break;
+            case 3:
+                dire = "img/asiatico.svg";
+                break;
+
+            default:
+                dire = "img/probi.svg";
+                break;
+        }
+        document.getElementById("bandeja").setAttribute("src", dire);
+
+
+        
+            document.getElementById("vidas").innerHTML="";
+        
+        for (i = 0; i < vidas; ++i) {
+            let vidita = document.createElement("img");
+            vidita.setAttribute("src", "img/corazon.jpg");
+            document.getElementById("vidas").appendChild(vidita);
+        }
+
         document.getElementById("puntos").innerText = "Puntos " + puntos;
     }
 
@@ -426,27 +502,27 @@ window.onload = function () {
         let numeroMesa = 0;
         let numeroSilla = 0;
         let hayCliente = true;
-        while(hayCliente && clientesActuales != (NUMEROMESAS*2)) {
+        while (hayCliente && clientesActuales != (NUMEROMESAS * 2) && LIMITECLIENTES != clientesActuales) {
             numeroMesa = Math.floor(Math.random() * NUMEROMESAS);
             numeroSilla = Math.floor(Math.random() * 2);
-            if (mesas[numeroMesa].sillas[numeroSilla].cliente == null) {
+            if (mesas[numeroMesa].sillas[numeroSilla].cliente == null && LIMITECLIENTES != clientesActuales) {
                 mesas[numeroMesa].sillas[numeroSilla].generarCliente();
                 hayCliente = false;
                 clientesActuales++;
             }
+        }
     }
-}
 
-function redibujarGlobos() {
-    for(i=0; i<mesas.length; ++i) {
-        for(u=0; u<2; ++u) {
-            if(mesas[i].sillas[u].cliente != null){
-                mesas[i].sillas[u].cliente.dibujarGlobo();
-                mesas[i].sillas[u].cliente.cafe.dibujar();
+    function redibujarGlobos() {
+        for (i = 0; i < mesas.length; ++i) {
+            for (u = 0; u < 2; ++u) {
+                if (mesas[i].sillas[u].cliente != null) {
+                    mesas[i].sillas[u].cliente.dibujarGlobo();
+                    mesas[i].sillas[u].cliente.cafe.dibujar();
+                }
             }
         }
     }
-}
 
 
     let canvas = document.getElementById("miCanvas");
@@ -458,12 +534,9 @@ function redibujarGlobos() {
     ctx = canvas.getContext("2d");
 
     ctx.drawImage(barra, 10, 10, 50, 390);
-    
-
-
     prota = new Protagonista();
     dibujarProta();
-    
+
 
 
 
@@ -477,22 +550,22 @@ function redibujarGlobos() {
     objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
 
     objetosColision.push(new Objeto(10, 10, 50, 390));
-    
 
-    let xms=200;
-    for(i=0; i<NUMEROMESAS; ++i) {
-    mesas.push(new Mesa(xms,100, MESAWIDTH, MESAHEIGHT, i));
-    xms +=MESAWIDTH*2;
-    objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
+
+    let xms = 200;
+    for (i = 0; i < NUMEROMESAS; ++i) {
+        mesas.push(new Mesa(xms, 100, MESAWIDTH, MESAHEIGHT, i));
+        xms += MESAWIDTH * 2;
+        objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
     }
 
     //generarClientes();
-    
+
     setInterval(generarClientes, GENCLIENTETIEMPO);
 
 
 
-    
+
 
     /*
     objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
