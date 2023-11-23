@@ -32,11 +32,10 @@ boton.src = "img/boton.png";
 let pjs = new Image();
 pjs.src = "img/pjs.png";
 
-const AUDIOPONER = new Audio("sonidos/poner.mp3");
+let audioPoner = new Audio("sonidos/poner.mp3");
+let audioAsco = new Audio("sonidos/asco.mp3");
+let audioBeber = new Audio("sonidos/beber.mp3");
 
-
-
-window.onload = function () {
 
     //tamaño canvas
     const CANVASWIDTH = 1200;
@@ -81,6 +80,8 @@ window.onload = function () {
     //id interval generacion clientes
     let idTiempoGeneradorCliente;
 
+    let nombreJugador;
+
 
 
     let mesas = [];
@@ -95,6 +96,8 @@ window.onload = function () {
 
 
     let ctx;
+
+
 
 
     class Objeto {
@@ -326,18 +329,13 @@ window.onload = function () {
 
 
 
-
-
-
-
-
     function activaMovimiento(event) {
         if (event.keyCode == 32) {
             comprobarInteracion();
         }
         if (event.keyCode == 32 && prota.area > -1 && prota.area < 4) {
-            AUDIOPONER.duration=0.3;
-            AUDIOPONER.play();
+            audioPoner.duration=0.3;
+            audioPoner.play();
             prota.cafe = objetosInteracion[prota.area];
             bandeja = prota.cafe.tipo;
             actualizarMarcador();
@@ -362,8 +360,10 @@ window.onload = function () {
     function comprobarBebida(prota_, cafe_) {
         if (prota_.cafe.tipo === cafe_.tipo) {
             puntos += 1;
+            audioBeber.play();
         } else {
             vidas -= 1;
+            audioAsco.play();
         }
         mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
         clientesActuales--;
@@ -480,56 +480,6 @@ window.onload = function () {
 
     }
 
-    function actualizarMarcador() {
-        let dire = "";
-        switch (bandeja) {
-
-            case 0:
-                dire = "img/solo.svg";
-                break;
-            case 1:
-                dire = "img/leche.svg";
-                break;
-            case 2:
-                dire = "img/cortado.svg";
-                break;
-            case 3:
-                dire = "img/asiatico.svg";
-                break;
-
-            default:
-                dire = "img/probi.svg";
-                break;
-        }
-        document.getElementById("bandeja").setAttribute("src", dire);
-
-
-
-        document.getElementById("vidas").innerHTML = "";
-
-        for (i = 0; i < vidas; ++i) {
-            let vidita = document.createElement("img");
-            vidita.setAttribute("src", "img/corazon.jpg");
-            document.getElementById("vidas").appendChild(vidita);
-        }
-
-        document.getElementById("puntos").innerText = "Puntos " + puntos;
-    }
-
-    function generarClientes() {
-        let numeroMesa = 0;
-        let numeroSilla = 0;
-        let hayCliente = true;
-        while (hayCliente && clientesActuales != (NUMEROMESAS * 2) && LIMITECLIENTES != clientesActuales) {
-            numeroMesa = Math.floor(Math.random() * NUMEROMESAS);
-            numeroSilla = Math.floor(Math.random() * 2);
-            if (mesas[numeroMesa].sillas[numeroSilla].cliente == null && LIMITECLIENTES != clientesActuales) {
-                mesas[numeroMesa].sillas[numeroSilla].generarCliente();
-                hayCliente = false;
-                clientesActuales++;
-            }
-        }
-    }
 
     function redibujarGlobos() {
         for (i = 0; i < mesas.length; ++i) {
@@ -543,69 +493,17 @@ window.onload = function () {
     }
 
 
-    function iniciarJuego() {
-
-        let canvas = document.createElement("canvas");
-        canvas.setAttribute("id", "miCanvas");
-        canvas.setAttribute("width", CANVASWIDTH);
-        canvas.setAttribute("height", CANVASHEIGHT);
-        document.body.appendChild(canvas);
-        ctx = canvas.getContext("2d");
-
-        //limpiamos el canvas
-        ctx.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
-
-        //iniciamos marcador
-        actualizarMarcador();
-
-        //dibujamos la barra
-        ctx.drawImage(barra, 10, 10, 50, 390);
-
-        //agrego colision a la barra
-        objetosColision.push(new Objeto(10, 10, 50, 390));
-
-        //creamos al prota y lo dibujamos
-        prota = new Protagonista();
-        dibujarProta();
-
-        // agregamos las escuchas a las teclas
-        document.addEventListener("keydown", activaMovimiento, false);
-        document.addEventListener("keyup", desactivaMovimiento, false);
-
-        //creo los cafes de la barra y los agrego a la raid de interaciones
-        objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
-        objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
-        objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
-        objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
-
-        //creamos las mesas iniciales
-        let xms = 200;
-        for (i = 0; i < NUMEROMESAS; ++i) {
-            mesas.push(new Mesa(xms, 100, MESAWIDTH, MESAHEIGHT, i));
-            xms += MESAWIDTH * 2;
-
-            //agrego colision a las mesas y sillas;
-            objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
-        }
-
-        //iniciamos la generacion automatica de clientes
-        idTiempoGeneradorCliente = setInterval(generarClientes, GENCLIENTETIEMPO);
-
-    }
-
 
     function iniciarMenu() {
-        ctx.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
-
-        ctx.drawImage(boton, CANVASWIDTH / 2 - 100, CANVASHEIGHT / 2 - 100, 300, 100);
-
-        document.addEventListener('mousedown', function () {
-            console.log("dale");
-        });
+        document.getElementById("fin").hidden=true;
+        document.getElementById("menu").hidden=false;
 
     }
 
     function finJuego() {
+
+        localStorage.setItem(nombreJugador, puntos);
+
         clearInterval(idTiempoGeneradorCliente);
 
         document.removeEventListener("keydown", activaMovimiento);
@@ -617,11 +515,152 @@ window.onload = function () {
         
 
         ctx.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
+        document.getElementById("miCanvas").hidden=true;
+        document.getElementById("barra").hidden=true;
+        document.getElementById("fin").hidden=false;
+        cargarRecords();
     }
 
+    
+
+function actualizarMarcador() {
+    let dire = "";
+    switch (bandeja) {
+
+        case 0:
+            dire = "img/solo.svg";
+            break;
+        case 1:
+            dire = "img/leche.svg";
+            break;
+        case 2:
+            dire = "img/cortado.svg";
+            break;
+        case 3:
+            dire = "img/asiatico.svg";
+            break;
+
+        default:
+            dire = "img/probi.svg";
+            break;
+    }
+    document.getElementById("bandeja").setAttribute("src", dire);
 
 
 
-    iniciarJuego();
+    document.getElementById("vidas").innerHTML = "";
+
+    for (i = 0; i < vidas; ++i) {
+        let vidita = document.createElement("img");
+        vidita.setAttribute("src", "img/corazon.jpg");
+        document.getElementById("vidas").appendChild(vidita);
+    }
+
+    document.getElementById("puntos").innerText = "Puntos " + puntos;
+}
+
+
+
+function generarClientes() {
+    let numeroMesa = 0;
+    let numeroSilla = 0;
+    let hayCliente = true;
+    while (hayCliente && clientesActuales != (NUMEROMESAS * 2) && LIMITECLIENTES != clientesActuales) {
+        numeroMesa = Math.floor(Math.random() * NUMEROMESAS);
+        numeroSilla = Math.floor(Math.random() * 2);
+        if (mesas[numeroMesa].sillas[numeroSilla].cliente == null && LIMITECLIENTES != clientesActuales) {
+            mesas[numeroMesa].sillas[numeroSilla].generarCliente();
+            hayCliente = false;
+            clientesActuales++;
+        }
+    }
+}
+
+
+
+function iniciarJuego() {
+
+    vidas = 3;
+    puntos = 0;
+
+
+    nombreJugador = document.getElementById("nombre").value;
+    document.getElementById("barra").hidden=false;
+    document.getElementById("menu").hidden=true;
+    let canvas = document.getElementById("miCanvas");
+    canvas.hidden = false;
+    canvas.setAttribute("width", CANVASWIDTH);
+    canvas.setAttribute("height", CANVASHEIGHT);
+    document.body.appendChild(canvas);
+    ctx = canvas.getContext("2d");
+
+    //limpiamos el canvas
+    ctx.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
+
+    //iniciamos marcador
+    actualizarMarcador();
+
+    //dibujamos la barra
+    ctx.drawImage(barra, 10, 10, 50, 390);
+
+    //agrego colision a la barra
+    objetosColision.push(new Objeto(10, 10, 50, 390));
+
+    //creamos al prota y lo dibujamos
+    prota = new Protagonista();
+    dibujarProta();
+
+    // agregamos las escuchas a las teclas
+    document.addEventListener("keydown", activaMovimiento, false);
+    document.addEventListener("keyup", desactivaMovimiento, false);
+
+    //creo los cafes de la barra y los agrego a la raid de interaciones
+    objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
+    objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
+
+    //creamos las mesas iniciales
+    let xms = 200;
+    for (i = 0; i < NUMEROMESAS; ++i) {
+        mesas.push(new Mesa(xms, 100, MESAWIDTH, MESAHEIGHT, i));
+        xms += MESAWIDTH * 2;
+
+        //agrego colision a las mesas y sillas;
+        objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
+    }
+
+    //iniciamos la generacion automatica de clientes
+    idTiempoGeneradorCliente = setInterval(generarClientes, GENCLIENTETIEMPO);
+
+}
+
+
+function cargarRecords() {
+    let datos = {};
+    for(i=0; i<localStorage.length; ++i) {
+        datos[localStorage.key(i)] = localStorage.getItem(localStorage.key(i));
+    }
+    let arrayDePares = Object.entries(datos);
+    arrayDePares.sort(function(a, b) {
+        return a[1] - b[1];
+      });
+      let datosOrdenados = {};
+
+      for (i = 0; i < arrayDePares.length; i++) {
+        let clave = arrayDePares[i][0];
+        let valor = arrayDePares[i][1];
+        datosOrdenados[clave] = valor;
+      }
+
+      console.log(datosOrdenados);
+}
+
+
+
+window.onload = function () {
+    
+    
+    //iniciarJuego();
 
 }

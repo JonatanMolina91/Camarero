@@ -49,16 +49,119 @@
             border-image: url(img/paredes.svg) 100 round;
             background-image: url(img/suelo.png);
         }
+
+        #menu * {
+            font-size: xx-large;
+           
+        }
+
+        .contenedor {
+            margin-top: 25%;
+            margin-left: 25%;
+        }
+
+        #menu label {
+            color: white;
+            margin-left: 18%;
+            
+           
+        }
+
+        #menu button {
+            margin-top: 10%;
+            margin-left: 12%;
+            
+        }
+
+        #fin {
+            width: 500px;
+            height: 500px;
+            border: 10px solid transparent;
+            border-image: url(img/paredes.svg) 100 round;
+            background-image: url(img/suelo.png);
+            font-size: xx-large;
+            color: white;
+            text-align: center;
+
+        }
+
+        #fin table * {
+           border: 1px solid white;
+
+        }
+        #fin h4 {
+            margin-top: 2%;
+            margin-bottom: 2%;
+        }
+
+        #fin button {
+           font-size: xx-large;
+           margin-top: 2%;
+        }
+
+
+        
     </style>
 </head>
 
 <body>
-    <div class="barra">
+    <div hidden id="barra"  class="barra">
         <img id="bandeja" />
         <div id="vidas">
         </div>
         <h1 id="puntos"></h1>
     </div>
+    <canvas hidden id = "miCanvas"></canvas>
+    
+    <div hidden  id="menu">
+        <div class="contenedor">
+        <label from="nombre">Nombre</label><br><br>
+        <input id="nombre" name="nombre" type="text" size="10"><br>
+        <button onClick="iniciarJuego()" id="empezar">Empezar</button>
+        </div>
+    </div>
+
+    <div  id="fin">
+        <h2>Estas Despedido</h4>
+        <h4>Mejores camareros</h4>
+        <table id="tabla">
+            <tr>
+                <th>Puesto</th>
+                <th>Nombre</th>
+                <th>Puntos</th>
+            </tr>
+
+            <tr>
+                <td>1</td>
+                <td>Nombre</td>
+                <td>Puntos</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Nombre</td>
+                <td>Puntos</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Nombre</td>
+                <td>Puntos</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Nombre</td>
+                <td>Puntos</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Nombre</td>
+                <td>Puntos</td>
+            </tr>
+        </table>
+
+        <button onclick="iniciarMenu()">Volver a jugar</button>
+    </div>
+
+
    
 </body>
 
