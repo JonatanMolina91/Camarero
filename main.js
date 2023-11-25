@@ -172,11 +172,14 @@ class Silla extends Objeto {
     //genera un cliente en la silla
     generarCliente() {
         this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT, this.orientacion, this.idMesa, this.orientacion);
+        
+        // recupero del array de interacion al cafe asignado a este cliente
         let idIn = 0;
         while (idIn < objetosInteracion.length && objetosInteracion[idIn].idMesa != this.idMesa && objetosInteracion[idIn].idSilla != this.idSilla) {
             ++idIn
         }
         
+        // creo setTimeout para que cuando termine un tiempo desaparezca el cliente
         this.idTiempo = setTimeout(function (id_) {
             this.cliente.eliminarCafe(+id_);
             this.cliente = null;
@@ -191,6 +194,7 @@ class Silla extends Objeto {
 
     }
 
+    //elimina al cliente generado
     eliminarCliente(id_ = -1) {
         clearTimeout(this.idTiempo);
         this.cliente.eliminarCafe(id_);
@@ -200,22 +204,23 @@ class Silla extends Objeto {
         }
     }
 
+    //dibuja la silla
     dibujar() {
         ctx.drawImage(this.imagen, this.x, this.y, this.siceX, this.siceY);
     }
 }
 
-
+//clase cliente
 class Cliente extends Objeto {
     constructor(x_, y_, siceX_, siceY_, orientacion_, idMesa_, idSilla_) {
         super(x_, y_, siceX_, siceY_);
         this.sprite = [[135, 4], [135, 199]];
         this.barraTiempoSprite = [[0, 0], [0, 20], [0, 40], [0, 60], [0, 80], [0, 100], [0, 120], [0, 140]];
         this.cafe = null;
-        this.orientacion = orientacion_;
+        this.orientacion = orientacion_; //para saber a que direccion esta mirando
         this.y = this.orientacion == 1 ? this.y - 15 : this.y;
-        this.idMesa = idMesa_;
-        this.idSilla = idSilla_;
+        this.idMesa = idMesa_; //para saber en que mesa esta
+        this.idSilla = idSilla_; //para saber en que silla esta
         this.dibujarCliente();
         this.generarCafe();
         this.idBarraTiempo;
@@ -223,8 +228,11 @@ class Cliente extends Objeto {
 
     }
 
+    // dibuja un cliente
     dibujarCliente() {
         ctx.drawImage(pjs, this.sprite[this.orientacion][0], this.sprite[this.orientacion][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
+        
+        //inicia la animacion de la barra de tiempo 
         this.dibujarBarraTiempo(0);
         this.idBarraTiempo = setInterval(function () {
             this.pos = this.pos != 7 ? (this.pos + 1) % 8 : this.pos;
@@ -232,6 +240,7 @@ class Cliente extends Objeto {
         }.bind(this), (TIEMPOESPERA / 8));
     }
 
+    //dibujo el globo donde se vera el cafe que desea el cliente
     dibujarGlobo() {
         ctx.fillStyle = "white";
         if (this.orientacion == 0) {
@@ -242,6 +251,7 @@ class Cliente extends Objeto {
 
     }
 
+    //dibuja la barra de tiempo
     dibujarBarraTiempo(id_) {
         if (this.orientacion == 0) {
             ctx.drawImage(imBarraTiempo, this.barraTiempoSprite[id_][0], this.barraTiempoSprite[id_][1], 50, 10, this.x, this.y, this.siceX, 5);
@@ -250,6 +260,7 @@ class Cliente extends Objeto {
         }
     }
 
+    //genera un cafe
     generarCafe() {
         this.dibujarGlobo();
         if (this.orientacion == 0) {
@@ -257,12 +268,16 @@ class Cliente extends Objeto {
         } else {
             this.cafe = new Cafe(this.x + 5, this.y + 28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
         }
+        console.log("creando cafe");
         objetosInteracion.push(this.cafe);
+        console.table(objetosInteracion);
 
     }
 
+
+    //elimina un cafe
     eliminarCafe(id_ = -1) {
-        clearInterval(this.idBarraTiempo);
+        clearInterval(this.idBarraTiempo); //detiene la animacion de la barra
 
         if (id_ != -1) {
             this.dibujarBarraTiempo(7);
@@ -272,19 +287,23 @@ class Cliente extends Objeto {
             } else {
                 ctx.clearRect(this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT + 32);
             }
-            objetosInteracion.splice(id_, 1);
+            objetosInteracion.splice(id_, 1); //quita del array de inteciones el cafe
         }
     }
 }
 
+//clase dafe que tiene como particular una array llamado area que 
+//servira para saber si el prota esta en el area de interacion
 class Cafe extends Objeto {
     constructor(x_, y_, siceX_, siceY_, tipo_, area_, idMesa_ = -1, idSilla_ = -1) {
         super(x_, y_, siceX_, siceY_);
-        this.area = area_;
+        this.area = area_; // este es el area
         this.tipo = tipo_;
         this.idMesa = idMesa_;
         this.idSilla = idSilla_;
         this.image;
+
+        //dependiendo que tipo de cafe cambiamos la img y su nombre
         switch (this.tipo) {
             case 0:
                 this.nombre = "solo";
@@ -305,6 +324,8 @@ class Cafe extends Objeto {
         }
         this.dibujar();
     }
+
+    //dibuja el cafe
     dibujar() {
         ctx.drawImage(this.image, this.x, this.y, this.siceX, this.siceY);
     }
@@ -318,7 +339,7 @@ class Cafe extends Objeto {
 
 
 
-
+// la clase protagonista
 class Protagonista {
     constructor() {
         this.sprite = [[43, 132], [73, 132], [43, 198], [73, 198], [40, 3], [73, 3], [43, 69], [73, 69]];
@@ -331,7 +352,7 @@ class Protagonista {
         this.cafe = "nada";
         this.area = -1;
     }
-
+// las funciones de movimiento
     moverDerecha() {
         if (this.x < (CANVASWIDTH - 40)) {
             this.x = this.x + VELOCIDAD;
@@ -366,11 +387,18 @@ class Protagonista {
 }
 
 
+//funcion que se usa cuando se le da a una tecla
+function activaAction(event) {
 
-function activaMovimiento(event) {
+    //comprueba si se a interactuado en un area
+    //cuando le da a la tecla escape cambiara 
+    //la propieda area de prota si esta en un area en concreto
     if (event.keyCode == 32) {
         comprobarInteracion();
     }
+
+    // si esta en un area que eprtenezca a lso cafe de la barra
+    // se ejecutara este if
     if (event.keyCode == 32 && prota.area > -1 && prota.area < 4) {
         audioPoner.duration = 0.3;
         audioPoner.play();
@@ -379,14 +407,19 @@ function activaMovimiento(event) {
         actualizarMarcador();
     }
 
+    //si esta en un area de un cliente creado se ejecutara este if
     if (event.keyCode == 32 && prota.area > 3) {
         bandeja = -1;
 
+        //comprobamos con es correcto la bebida del prota y la del cliente
         comprobarBebida(prota, objetosInteracion[prota.area]);
         prota.cafe = "vacio";
         actualizarMarcador();
     }
+
+    //este if es para el movimiento
     if (!prota.moviendo && event.keyCode > 36 && event.keyCode < 41) {
+        //se inicia la animacion de prota cuando pulsa una de las teclas de movimiento
         prota.animacion = setInterval(dibujarProta, 1000 / 30);
         prota.moviendo = true;
         prota.direccion = event.keyCode
@@ -395,6 +428,10 @@ function activaMovimiento(event) {
 
 }
 
+
+//funcion encargada de comprobar 
+//si es corrercto la bebida lelvada por el prota al cliente
+//tambiens encarga de actualziar el marcado dependiendo de si es correcto o no
 function comprobarBebida(prota_, cafe_) {
     if (prota_.cafe.tipo === cafe_.tipo) {
         puntos += 1;
@@ -406,12 +443,16 @@ function comprobarBebida(prota_, cafe_) {
     }
     mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
     clientesActuales--;
+
+    // si las vidas llegan a 0 ejecutara la funcion finJuego()
     if (vidas <= 0) {
         finJuego();
     }
 }
 
-function desactivaMovimiento(event) {
+// se ejecuta cuadno se suelte una tecla
+//solo esta programada para cuandos e suelte una tecla de la dirrecion
+function desactivaAction(event) {
     if (prota.moviendo && event.keyCode > 36 && event.keyCode < 41 && event.keyCode == prota.direccion) {
         clearInterval(prota.animacion);
         prota.moviendo = false;
@@ -435,6 +476,7 @@ function desactivaMovimiento(event) {
     }
 }
 
+//se usa para dibujar al prota en el mapa
 function dibujarProta() {
 
     ctx.clearRect(prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
@@ -458,14 +500,21 @@ function dibujarProta() {
             break;
     }
 
-
-    comprobarChoque(objetosColision);
+    //antes de dibujarlo comprobamos que no este dentro del area de un objeto de colision
+    // si esta dentro de ese area de colision cambiaremos lar cordenadas 
+    // un poco atras para hacer el efecto de choque
+    comprobarChoque(objetosColision); 
     ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
+
+    //se redibuja los globos de los cliente para cuando pase el prota no borre dicho globos
     redibujarGlobos();
 
 
 }
 
+//funcion que impide que el prota transpase un objeto con colosion
+//se le pasa un array de tipo Objeto
+//como todo hereda de objeto cualquier cosa se le puede pasar
 function comprobarChoque(obj_) {
     let bIzq = prota.x;
     let bDer = prota.x + PROTAWIDTH;
@@ -494,6 +543,11 @@ function comprobarChoque(obj_) {
 
 }
 
+//Se encargar de comprobar si el prota esta en un area en concreto
+//si lo esta la variable area de prota se le asigna una id de area
+//que apunta dentro de un array de objetos de tipo Interacion al area
+//donde esta, si no se le asigna -1
+//esta funcion es llamada cada vez que se pulsa la tecal escape
 function comprobarInteracion() {
     let bIzq = prota.x;
     let bDer = prota.x + PROTAWIDTH;
@@ -519,7 +573,10 @@ function comprobarInteracion() {
 
 }
 
-
+//funcion para redibujar los globos de los clientes
+//que estan actualmente en el mapa
+// se utiliza para que el prota no borre el globo
+//cada vez que pase
 function redibujarGlobos() {
     for (i = 0; i < mesas.length; ++i) {
         for (u = 0; u < 2; ++u) {
@@ -532,15 +589,20 @@ function redibujarGlobos() {
 }
 
 
-
+//inicia el menu principal
 function iniciarMenu() {
     document.getElementById("fin").hidden = true;
     document.getElementById("menu").hidden = false;
 
 }
 
+//inicia el fin del juego
 function finJuego() {
+
+    //detiene la generacion de clientes
     clearInterval(idTiempoGeneradorCliente);
+
+    //elimina todos los clientes que queda ene l mapa
     for (i = 0; i < mesas.length; ++i) {
         if (mesas[i].sillas[0].cliente != null) {
             mesas[i].sillas[0].eliminarCliente();
@@ -551,19 +613,23 @@ function finJuego() {
         }
     }
 
+    //guarda los puntos en la localStore
     localStorage.setItem(nombreJugador, puntos);
 
 
+    //elimina las escuchas de las teclas
+    document.removeEventListener("keydown", activaAction);
+    document.removeEventListener("keyup", desactivaAction);
 
-    document.removeEventListener("keydown", activaMovimiento);
-    document.removeEventListener("keyup", desactivaMovimiento);
-
+    //vacias los arrays emportantes que es colision e interacion
     objetosColision = [];
     objetosInteracion = [];
 
 
-
+    //borra el mapa
     ctx.clearRect(0, 0, CANVASWIDTH, CANVASHEIGHT);
+
+    //desativa el marcador, el canvas y activa el menu fin
     document.getElementById("miCanvas").hidden = true;
     document.getElementById("barra").hidden = true;
     document.getElementById("fin").hidden = false;
@@ -571,7 +637,7 @@ function finJuego() {
 }
 
 
-
+//Encargado de actualizar el marcador de arriba
 function actualizarMarcador() {
     let dire = "";
     switch (bandeja) {
@@ -609,11 +675,12 @@ function actualizarMarcador() {
 }
 
 
-
+//funcion que genera un cliente
 function generarClientes() {
     let numeroMesa = 0;
     let numeroSilla = 0;
     let hayCliente = true;
+    //comprueba de toda las mesas creadas donde no hay cliente para generar uno
     while (hayCliente && clientesActuales != (numeroMesas * 2)) {
         numeroMesa = Math.floor(Math.random() * numeroMesas);
         numeroSilla = Math.floor(Math.random() * 2);
@@ -626,9 +693,10 @@ function generarClientes() {
 }
 
 
-
+//funcion que inicia el juego
 function iniciarJuego() {
 
+    //inicializamos las variables por si acaso
     vidas = 3;
     puntos = 0;
     xms = 200;
@@ -641,11 +709,16 @@ function iniciarJuego() {
 
 
 
+    //Recuperamos el nombre del jugador
     nombreJugador = document.getElementById("nombre").value;
+
+    //quitamos el menu y ponemos la barra y el canvas
     document.getElementById("barra").hidden = false;
     document.getElementById("menu").hidden = true;
     let canvas = document.getElementById("miCanvas");
     canvas.hidden = false;
+
+    //asignamos las medidas al canvas
     canvas.setAttribute("width", CANVASWIDTH);
     canvas.setAttribute("height", CANVASHEIGHT);
     document.body.appendChild(canvas);
@@ -656,7 +729,7 @@ function iniciarJuego() {
 
 
 
-    //dibujamos la barra
+    //dibujamos la barra de los cafes
     ctx.drawImage(barra, 10, 10, 50, 390);
 
     //agrego colision a la barra
@@ -670,8 +743,8 @@ function iniciarJuego() {
     actualizarMarcador();
 
     // agregamos las escuchas a las teclas
-    document.addEventListener("keydown", activaMovimiento, false);
-    document.addEventListener("keyup", desactivaMovimiento, false);
+    document.addEventListener("keydown", activaAction, false);
+    document.addEventListener("keyup", desactivaAction, false);
 
     //creo los cafes de la barra y los agrego a la raid de interaciones
     objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
@@ -689,6 +762,7 @@ function iniciarJuego() {
 
 }
 
+//genera una mesa con sus 2 sillas
 function crearMesa(id_) {
     mesas.push(new Mesa(xms, 100, MESAWIDTH, MESAHEIGHT, id_));
     xms += MESAWIDTH * 2;
@@ -697,7 +771,8 @@ function crearMesa(id_) {
     objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
 }
 
-
+//funcion encargada de recupera los datos
+//de localStore y mostrarlo en una tabla en el menu fin del juego
 function cargarRecords() {
     let datos = {};
     for (i = 0; i < localStorage.length; ++i) {
@@ -737,6 +812,8 @@ function cargarRecords() {
 
 }
 
+//comprueba si se puede subir de nivel
+// y si puede aumenta el nivel del juego
 function comprobarNivel() {
     if (puntos == (nivel * PUNTOSSUBIR)) {
         crearMesa(numeroMesas);
@@ -747,7 +824,7 @@ function comprobarNivel() {
 }
 
 
-
+// esto lo usaba para pruebas
 window.onload = function () {
 
 
