@@ -23,6 +23,9 @@ imCortado.src = "img/cortado.svg";
 let imAsiatico = new Image();
 imAsiatico.src = "img/asiatico.svg";
 
+let imNatillas = new Image();
+imNatillas.src = "img/natillas.svg";
+
 let imBarraTiempo = new Image();
 imBarraTiempo.src = "img/barra_tiempo.svg";
 
@@ -49,6 +52,7 @@ const MESAHEIGHT = 50;
 
 //inicio en x de la siguiente mesa
 let xms = 200;
+let yms = 50;
 
 //tamaño sillas
 const SILLAWIDTH = 30;
@@ -64,6 +68,7 @@ const CLIENTEHEIGHT = 40;
 
 //cantidad de pixeles que se meve el prota
 const VELOCIDAD = 10;
+let velocidadAnimacion = 30;
 
 //numero maximo de clientes que se genera
 const LIMITECLIENTES = Infinity;
@@ -72,7 +77,7 @@ const LIMITECLIENTES = Infinity;
 let numeroMesas = 1;
 
 //por cada cuanto cafes sube de nivel
-const PUNTOSSUBIR = 3;
+let PUNTOSSUBIR = 3;
 
 //parametros de subida de nivel, 
 //en este caso se aumentara solo el numero
@@ -116,6 +121,9 @@ let bandeja = -1; //contenido de la badeja del jugador
 let vidas = 3; //las vidas del jugador
 let puntos = 0; // los puntos del jugador
 let nivel = 1; // nivel de dificulta
+
+let modoInmortal = false;
+let modoNatillas = false;
 
 
 
@@ -172,20 +180,21 @@ class Silla extends Objeto {
     //genera un cliente en la silla
     generarCliente() {
         this.cliente = new Cliente(this.x, this.y, PROTAWIDTH, PROTAHEIGHT, this.orientacion, this.idMesa, this.orientacion);
-        
+
         // recupero del array de interacion al cafe asignado a este cliente
         let idIn = 0;
         while (idIn < objetosInteracion.length && objetosInteracion[idIn].idMesa != this.idMesa && objetosInteracion[idIn].idSilla != this.idSilla) {
             ++idIn
         }
-        
+
         // creo setTimeout para que cuando termine un tiempo desaparezca el cliente
         this.idTiempo = setTimeout(function (id_) {
             this.cliente.eliminarCafe(+id_);
             this.cliente = null;
             this.dibujar();
             --clientesActuales;
-            --vidas;
+            if (!modoInmortal)
+                --vidas;
             if (vidas <= 0) {
                 finJuego();
             }
@@ -231,7 +240,7 @@ class Cliente extends Objeto {
     // dibuja un cliente
     dibujarCliente() {
         ctx.drawImage(pjs, this.sprite[this.orientacion][0], this.sprite[this.orientacion][1], 25, 40, this.x, this.y, CLIENTEWIDTH, CLIENTEHEIGHT);
-        
+
         //inicia la animacion de la barra de tiempo 
         this.dibujarBarraTiempo(0);
         this.idBarraTiempo = setInterval(function () {
@@ -264,9 +273,18 @@ class Cliente extends Objeto {
     generarCafe() {
         this.dibujarGlobo();
         if (this.orientacion == 0) {
+            if(!modoNatillas) {
             this.cafe = new Cafe(this.x + 5, this.y - 28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            } else {
+                this.cafe = new Cafe(this.x + 5, this.y - 28, 20, 20, 4, [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            }
         } else {
+            if(!modoNatillas) {
             this.cafe = new Cafe(this.x + 5, this.y + 28, 20, 20, Math.floor(Math.random() * 4), [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);
+            } else {
+                this.cafe = new Cafe(this.x + 5, this.y + 28, 20, 20, 4, [(this.x - 30), this.y, this.siceX + 60, this.siceY], this.idMesa, this.idSilla);   
+            }
+
         }
         console.log("creando cafe");
         objetosInteracion.push(this.cafe);
@@ -321,6 +339,10 @@ class Cafe extends Objeto {
                 this.nombre = "asiatico";
                 this.image = imAsiatico;
                 break;
+                case 4:
+                this.nombre = "natillas";
+                this.image = imNatillas;
+                break;
         }
         this.dibujar();
     }
@@ -352,7 +374,7 @@ class Protagonista {
         this.cafe = "nada";
         this.area = -1;
     }
-// las funciones de movimiento
+    // las funciones de movimiento
     moverDerecha() {
         if (this.x < (CANVASWIDTH - 40)) {
             this.x = this.x + VELOCIDAD;
@@ -420,7 +442,7 @@ function activaAction(event) {
     //este if es para el movimiento
     if (!prota.moviendo && event.keyCode > 36 && event.keyCode < 41) {
         //se inicia la animacion de prota cuando pulsa una de las teclas de movimiento
-        prota.animacion = setInterval(dibujarProta, 1000 / 30);
+        prota.animacion = setInterval(dibujarProta, 1000 / velocidadAnimacion);
         prota.moviendo = true;
         prota.direccion = event.keyCode
     }
@@ -438,7 +460,8 @@ function comprobarBebida(prota_, cafe_) {
         audioBeber.play();
         comprobarNivel();
     } else {
-        vidas -= 1;
+        if (!modoInmortal)
+            vidas -= 1;
         audioAsco.play();
     }
     mesas[cafe_.idMesa].sillas[cafe_.idSilla].eliminarCliente(prota_.area);
@@ -503,7 +526,7 @@ function dibujarProta() {
     //antes de dibujarlo comprobamos que no este dentro del area de un objeto de colision
     // si esta dentro de ese area de colision cambiaremos lar cordenadas 
     // un poco atras para hacer el efecto de choque
-    comprobarChoque(objetosColision); 
+    comprobarChoque(objetosColision);
     ctx.drawImage(pjs, prota.sprite[prota.posicion][0], prota.sprite[prota.posicion][1], 17, 40, prota.x, prota.y, PROTAWIDTH, PROTAHEIGHT);
 
     //se redibuja los globos de los cliente para cuando pase el prota no borre dicho globos
@@ -654,6 +677,9 @@ function actualizarMarcador() {
         case 3:
             dire = "img/asiatico.svg";
             break;
+            case 4:
+                dire = "img/natillas.svg";
+                break;
 
         default:
             dire = "img/probi.svg";
@@ -696,6 +722,7 @@ function generarClientes() {
 //funcion que inicia el juego
 function iniciarJuego() {
 
+
     //inicializamos las variables por si acaso
     vidas = 3;
     puntos = 0;
@@ -707,10 +734,33 @@ function iniciarJuego() {
     bandeja = -1;
 
 
+    function easterEgg() {
+        switch (nombreJugador.toUpperCase()) {
+            case "ANDONY":
+                velocidadAnimacion = 200;
+                break;
+            case "JONATAN":
+                velocidadAnimacion = 3;
+                break;
+            case "PEDRO":
+                numeroMesas = 30;
+                GENCLIENTETIEMPO = 1000;
+                PUNTOSSUBIR = Infinity;
+                TIEMPOESPERA = 1000 * 8;
+                break;
+            case "LIDIA":
+                modoInmortal = true;
+                break;
+                case "MARIA":
+                    modoNatillas = true;
+                    break;
 
+        }
+    }
 
     //Recuperamos el nombre del jugador
     nombreJugador = document.getElementById("nombre").value;
+
 
     //quitamos el menu y ponemos la barra y el canvas
     document.getElementById("barra").hidden = false;
@@ -746,14 +796,25 @@ function iniciarJuego() {
     document.addEventListener("keydown", activaAction, false);
     document.addEventListener("keyup", desactivaAction, false);
 
-    //creo los cafes de la barra y los agrego a la raid de interaciones
-    objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
-    objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
-    objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
-    objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
+    
+    
+
+    easterEgg();
+    
+//creo los cafes de la barra y los agrego a la raid de interaciones
+    if(!modoNatillas) {
+        objetosInteracion.push(new Cafe(25, 350, 20, 20, 0, [45, 350, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 300, 20, 20, 1, [45, 300, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 250, 20, 20, 2, [45, 250, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 200, 20, 20, 3, [45, 200, 40, 20]));
+        } else {
+        objetosInteracion.push(new Cafe(25, 350, 20, 20, 4, [45, 350, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 300, 20, 20, 4, [45, 300, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 250, 20, 20, 4, [45, 250, 40, 20]));
+        objetosInteracion.push(new Cafe(25, 200, 20, 20, 4, [45, 200, 40, 20]));
+        }
 
     //creamos las mesas iniciales
-
     for (i = 0; i < numeroMesas; ++i) {
         crearMesa(i);
     }
@@ -764,9 +825,12 @@ function iniciarJuego() {
 
 //genera una mesa con sus 2 sillas
 function crearMesa(id_) {
-    mesas.push(new Mesa(xms, 100, MESAWIDTH, MESAHEIGHT, id_));
+    mesas.push(new Mesa(xms, yms, MESAWIDTH, MESAHEIGHT, id_));
     xms += MESAWIDTH * 2;
-
+    if (xms >= CANVASWIDTH - MESAWIDTH) {
+        yms += 200;
+        xms = 200;
+    }
     //agrego colision a las mesas y sillas;
     objetosColision.push(mesas[i], mesas[i].sillas[0], mesas[i].sillas[1]);
 }
